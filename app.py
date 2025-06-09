@@ -36,14 +36,18 @@ is_jumping = False
 velocity_y = 0
 
 # Obstacles
-obstacle_width = 50
+obstacle_width = 125
 obstacle_height = 50
 obstacles = []
 spawn_timer = 0  # Time between obstacle spawns
 score = 1
 def spawn_obstacle():
-    x_pos = random.choice([WIDTH // 4, WIDTH // 2, 3 * WIDTH // 4])
+    lane_width = WIDTH // 3
+    lanes = [i * lane_width for i in range(3)]  # [0, 166, 332]
+    x_pos = random.choice(lanes)
     obstacles.append(pygame.Rect(x_pos, -obstacle_height, obstacle_width, obstacle_height))
+    x_pos += (lane_width - obstacle_width) // 2
+
 
 # Main Game Loop
 running = True
