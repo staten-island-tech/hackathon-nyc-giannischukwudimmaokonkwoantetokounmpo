@@ -24,11 +24,12 @@ speed = 7
 speed_timer = 0  # Tracks frames to increment speed
 
 # Player Settings
-player_size = 50
+player_size = 75
 player_x = WIDTH // 2
 player_y = HEIGHT - player_size - 30
 player_velocity = 10
-
+player_image = pygame.image.load("oofyjake.png").convert_alpha()
+player_image = pygame.transform.scale(player_image, (player_size, player_size))
 # Invincibility (no collision) timer
 invincible = False
 invincibility_timer = 0
@@ -93,7 +94,7 @@ while running:
     if speed_timer % 60 == 0:  # Every 1 second at 60 FPS
         score = score*1.2
         if speed != 25:
-            speed += 0.5
+            speed += 0.5    
             print(f"Speed increased to: {speed:.1f}")
 
     # Collision Detection
@@ -116,7 +117,7 @@ while running:
        invincibility_cooldown -= 1
 
     # Draw Player  
-    
+    screen.blit(player_image, (player_x, player_y))
 
     # Draw Obstacles
     for obstacle in obstacles:
