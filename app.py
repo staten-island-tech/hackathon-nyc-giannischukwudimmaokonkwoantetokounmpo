@@ -13,21 +13,28 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Subway Surfers Lite")
 background_img = pygame.image.load("background.jpg").convert()
 background_img = pygame.transform.scale(background_img, (WIDTH, HEIGHT))
+
 # Game Variables
 speed = 7
 speed_timer = 0  # Tracks frames to increment speed
 
 # Player Settings
 player_size = 75
-player_x = WIDTH // 2
-player_y = HEIGHT - player_size - 30
-player_velocity = 10
+player_lane = 1  # Start in middle lane
+
 # Invincibility (no collision) timer
 invincible = False
 invincibility_timer = 0
 invincibility_duration = 30  # Half a second at 60 FPS
 invincibility_cooldown = 0  # Time until spacebar can be used again
 cooldown_duration = 240     # 4 seconds at 60 FPS
+# lanes for obstacles and moving
+lane_width = WIDTH // 3
+lanes = [lane_width * i + (lane_width - player_size) // 2 for i in range(3)]
+#player position
+player_x = lanes[player_lane]
+player_y = HEIGHT - player_size - 30
+player_velocity = 10
 # Obstacles
 obstacle_width = 150
 obstacle_height = 80
@@ -43,6 +50,9 @@ obstacle_right_img = pygame.transform.scale(obstacle_right_img, (obstacle_width,
 spawn_timer = 0  # Time between obstacle spawns
 speed_timer = 0 # time before the obstacle spawns double
 score = 1
+#cooldown between moving
+lane_move_cooldown = 0
+lane_move_delay = 10
 class Obstacle:
     def __init__(self, x, y, image):
         self.rect = pygame.Rect(x, y, obstacle_width, obstacle_height)
@@ -54,13 +64,14 @@ class Obstacle:
     def draw(self, screen):
         screen.blit(self.image, (self.rect.x, self.rect.y))
 def spawn_obstacle():
-    lane_width = WIDTH // 3
-    lanes = [0, 1, 2]  # Lane indices
+    obstacle_lanes = [
+    lane_width * 0 + (lane_width - obstacle_width) // 2,
+    lane_width * 1 + (lane_width - obstacle_width) // 2,
+    lane_width * 2 + (lane_width - obstacle_width) // 2
+ ]
+    lane = random.choice([0, 1, 2])
+    x_pos = obstacle_lanes[lane]  # Use obstacle lane not player lane
 
-    lane = random.choice(lanes)
-    x_pos = lane * lane_width + (lane_width - obstacle_width) // 2
-
-    # Assign image based on lane
     if lane == 0:
         image = obstacle_left_img
     elif lane == 1:
@@ -69,8 +80,6 @@ def spawn_obstacle():
         image = obstacle_right_img
 
     obstacles.append(Obstacle(x_pos, -obstacle_height, image))
-
-
 # Main Game Loop
 running = True
 while running:
@@ -84,14 +93,24 @@ while running:
 
     # Input Handling
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_LEFT] and player_x > 0:
-        player_x -= player_velocity
-    if keys[pygame.K_RIGHT] and player_x < WIDTH - player_size:
-        player_x += player_velocity
+
+    if lane_move_cooldown == 0:
+        if keys[pygame.K_LEFT] and player_lane > 0:
+            player_lane -= 1
+            player_x = lanes[player_lane]
+            lane_move_cooldown = lane_move_delay
+        elif keys[pygame.K_RIGHT] and player_lane < len(lanes) - 1:
+            player_lane += 1
+            player_x = lanes[player_lane]
+            lane_move_cooldown = lane_move_delay
     if keys[pygame.K_SPACE] and not invincible and invincibility_cooldown <= 0:
         invincible = True
         invincibility_timer = invincibility_duration
         invincibility_cooldown = cooldown_duration
+
+    # Decrease cooldown every frame
+    if lane_move_cooldown > 0:
+        lane_move_cooldown -= 1
 
 
     # Spawn Obstacles Periodically
